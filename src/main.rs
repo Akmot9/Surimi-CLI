@@ -1,6 +1,23 @@
-use std::io;
+use std::{io, sync::Arc};
 use file_integrity::{list_files, hash_file_list, write_json_file} ;
+use std::{thread, time::Duration, io::Write};
 use colored::Colorize;
+use std::sync::atomic::{AtomicBool, Ordering};
+
+
+const SPINNER_FRAMES: [&str; 10] = [
+    "🦀        ",
+    "🦀🔪     ",
+    "🦀  🔪   ",
+    "🦀🔪     ",
+    "🦀        ",
+    "🦀🔪     ",
+    "🦀  🔪   ",
+    "🦀🔪     ",
+    "🍥🔪     ",
+    "🍥       ",
+];
+
 
 fn main() {
     title();
@@ -8,9 +25,27 @@ fn main() {
     let estimate_time = ask_yes_no("Do you want to estimate the time of the scan?");
     if estimate_time {
         println!("Estimating time...");
-        let folder_path = "/"; // Change this to the desired folder path
+        let folder_path = "/";
+
+        // Use an AtomicBool flag to communicate with the spinner thread
+        let should_stop_spinner = Arc::new(AtomicBool::new(false));
+
+        // Clone the AtomicBool flag for the closure
+        let should_stop_spinner_clone = Arc::clone(&should_stop_spinner);
+
+        // Spawn a new thread to run the spinner function concurrently with the list_files function
+        let spinner_thread = thread::spawn(move || run_spinner(&should_stop_spinner_clone));
+
         let nbs_of_file = list_files(&folder_path);
+
+        // Signal the spinner thread to stop by setting the AtomicBool flag
+        should_stop_spinner.store(true, Ordering::SeqCst);
+
+        // Wait for the spinner thread to finish
+        spinner_thread.join().unwrap();
+
         println!("INFOS: Number of files: {}", nbs_of_file);
+
 
         let generate_report = ask_yes_no("Do you want to generate the integrity report?");
         if generate_report {
@@ -52,4 +87,24 @@ fn ask_yes_no(question: &str) -> bool {
             _ => println!("Please enter 'y' or 'n'."),
         }
     }
+}
+
+fn run_spinner(should_stop_spinner: &AtomicBool) {
+    // Hide the cursor.
+    print!("\x1B[?25l");
+    io::stdout().flush().unwrap();
+
+    let mut frame_index = 0;
+    while !should_stop_spinner.load(Ordering::SeqCst) {
+        print!("\r\x1B[K{}", SPINNER_FRAMES[frame_index]);
+        io::stdout().flush().unwrap();
+
+        frame_index = (frame_index + 1) % SPINNER_FRAMES.len();
+
+        thread::sleep(Duration::from_millis(200));
+    }
+
+    // Show the cursor again.
+    print!("\x1B[?25h");
+    io::stdout().flush().unwrap();
 }
