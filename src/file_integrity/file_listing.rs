@@ -42,18 +42,25 @@ pub fn list_files(folder_to_list: &str) -> i32 {
     let mut filenames = Vec::new();
 
     for file in WalkDir::new(&folder_to_list).into_iter().filter_map(|file| file.ok()) {
-        if let Ok(metadata) = file.metadata() {
-            if metadata.is_file() {
-                count += 1;
-                filenames.push(file.path().display().to_string());
+        let path = file.path().display().to_string();
+    
+        if !path.starts_with("/sys/") &&
+           !path.starts_with("/dev/") &&
+           !path.starts_with("/run/") &&
+           !path.starts_with("/proc/") {
+            
+            if let Ok(metadata) = file.metadata() {
+                if metadata.is_file() {
+                    count += 1;
+                    filenames.push(path);
+                }
+            } else if let Some(error) = file.metadata().err() {
+                // Log the error message using log macro
+                log!("ERROR: Can't access file: {:?}: {}", path, error);
             }
-        } else if let Some(error) = file.metadata().err() {
-            // Log the error message using log macro
-            log!("ERROR: Can't access file: {:?}: {}", file.path(), error);
         }
-    }
-
-    // Write filenames to file.txt
+    }    // Write filenames to file.txt
+    
     if let Ok(file) = File::create("file_list.txt") {
         let mut writer = BufWriter::new(file);
         for filename in &filenames {

@@ -54,7 +54,7 @@ fn main() {
         if generate_report {
             let name = ask_for_json_filename();
             println!("Integrity reports in progress...");
-            let hashs = hash_file_list();
+            let hashs = hash_file_list(&nbs_of_file);
             
             write_json_file(&hashs, &name) ;
             println!("JSON report written successfully.");

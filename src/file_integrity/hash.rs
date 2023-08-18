@@ -37,9 +37,10 @@ use chrono::Local;
 /// This function can return an error if the file cannot be opened or read, or if there are
 /// issues reading lines from the file.
 
-pub fn hash_file_list() -> FileList {
+pub fn hash_file_list(total: & i32) -> FileList {
     logw!("STATUS: Hashing files: Please wait...");
     let date = Local::now().format("%Y-%m-%d").to_string();
+    let mut file_hashed = 0;
     let mut liste = FileList {
         date,
         files: vec![],
@@ -52,6 +53,9 @@ pub fn hash_file_list() -> FileList {
         Ok(file) => file,
         Err(error) => {
             logd!("ERROR: Can't open file '{}': {}", actual_filename, error);
+            // Increment the counter for successfully hashed files
+            file_hashed += 1;
+            print!("\r{file_hashed} / {total}");
             return liste;
         }
     };
@@ -61,18 +65,30 @@ pub fn hash_file_list() -> FileList {
             Ok(line) => line,
             Err(error) => {
                 log!("ERROR: Can't read line from file '{}': {}", actual_filename, error);
+                // Increment the counter for successfully hashed files
+                file_hashed += 1;
+                let percentage = (file_hashed * 100) / total;
+                print!("\r{file_hashed} / {total}: {percentage}%");
                 continue;
             }
         };
 
         // Exclude files that start with '/sys/', '/dev/', '/run/', and '/proc/' from being hashed
-        if !line.starts_with("/sys/") && !line.starts_with("/dev/")
-            && !line.starts_with("/run/") && !line.starts_with("/proc/") {
-            let file_info = hash_file(line);
-            liste.files.push(file_info);
+        if !line.starts_with("/sys/") && 
+            !line.starts_with("/dev/")
+            && !line.starts_with("/run/") 
+            && !line.starts_with("/proc/") {
+                let file_info = hash_file(line);
+                liste.files.push(file_info);
+
+                // Increment the counter for successfully hashed files
+                file_hashed += 1;
+                let percentage = (file_hashed * 100) / total;
+                print!("\r{}% - {}/{}", percentage, file_hashed, total);
         }
     }
     log!("STATUS: Hashing files: Success !");
+    log!("infos: Hashed files: {file_hashed} !");
     liste
 }
 
