@@ -1,9 +1,12 @@
 use std::{io, sync::Arc};
-use file_integrity::{list_files, hash_file_list, write_json_file} ;
+//use file_integrity::{list_files, hash_file_list, write_json_file} ;
 use std::{thread, time::Duration, io::Write};
 use colored::Colorize;
 use std::sync::atomic::{AtomicBool, Ordering};
 
+use crate::file_integrity::{hash_file_list, list_files, write_json_file};
+
+mod file_integrity ;
 
 const SPINNER_FRAMES: [&str; 10] = [
     "🦀        ",
@@ -44,14 +47,16 @@ fn main() {
         // Wait for the spinner thread to finish
         spinner_thread.join().unwrap();
 
-        println!("INFOS: Number of files: {}", nbs_of_file);
+        pre_calcule(nbs_of_file) ;
 
-
-        let generate_report = ask_yes_no("Do you want to generate the integrity report?");
+        let generate_report = 
+        ask_yes_no("Do you want to generate the integrity report ?");
         if generate_report {
+            let name = ask_for_json_filename();
+            println!("Integrity reports in progress...");
             let hashs = hash_file_list();
-            let name = "output.json";
-            write_json_file(&hashs, name) ;
+            
+            write_json_file(&hashs, &name) ;
             println!("JSON report written successfully.");
         } else {
             println!("Report generation cancelled.");
@@ -107,4 +112,23 @@ fn run_spinner(should_stop_spinner: &AtomicBool) {
     // Show the cursor again.
     print!("\x1B[?25h");
     io::stdout().flush().unwrap();
+}
+
+fn pre_calcule(nb: i32) {
+    println!("Number of files to hash: {}", nb);
+}
+
+fn ask_for_json_filename() -> String {
+    loop {
+        println!("Please enter the name of the JSON file (or press Enter to cancel):");
+        let mut input = String::new();
+        io::stdin().read_line(&mut input).expect("Failed to read line");
+
+        let name = input.trim().to_string();
+        if !name.is_empty() {
+            return name;
+        } else {
+            println!("Invalid entry. Please provide a non-empty filename.");
+        }
+    }
 }
