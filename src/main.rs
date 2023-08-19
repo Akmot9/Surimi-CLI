@@ -1,3 +1,4 @@
+use std::fs;
 use std::{io, sync::Arc};
 //use file_integrity::{list_files, hash_file_list, write_json_file} ;
 use std::{thread, time::Duration, io::Write};
@@ -64,6 +65,7 @@ fn main() {
     } else {
         println!("No time estimation requested.");
     }
+    fs::remove_file("file_list.txt").expect("{err}");
 }
 fn title() {
     let text = "
