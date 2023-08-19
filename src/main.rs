@@ -27,7 +27,7 @@ fn main() {
 
     let estimate_time = ask_yes_no("Do you want to estimate the time of the scan?");
     if estimate_time {
-        println!("Estimating time...");
+        println!("Listing files: Please wait...");
         let folder_path = "/";
 
         // Use an AtomicBool flag to communicate with the spinner thread
@@ -57,7 +57,7 @@ fn main() {
             let hashs = hash_file_list(&nbs_of_file);
             
             write_json_file(&hashs, &name) ;
-            println!("JSON report written successfully.");
+            println!("🍥 JSON report written successfully. 🍥");
         } else {
             println!("Report generation cancelled.");
         }
@@ -74,7 +74,7 @@ fn title() {
 /_______  /____/ |__|  |__|__|_|  /__|
         \\/                      \\/    
 
-A simple cli app to make integrity reports of your computer.\n";
+A simple rust 🦀 cli app to make integrity reports of your computer. 🍥\n";
     println!("{}", text.truecolor(239, 112, 90));
 }
 
@@ -115,7 +115,7 @@ fn run_spinner(should_stop_spinner: &AtomicBool) {
 }
 
 fn pre_calcule(nb: i32) {
-    println!("Number of files to hash: {}", nb);
+    println!("Number of files to hash: {} 🔪", nb);
 }
 
 fn ask_for_json_filename() -> String {

@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{Read, BufReader, BufRead};
+use std::io::{Read, BufReader, BufRead, self, Write};
 use md5::{Md5, Digest};
 use crate::file_integrity::data::{FileInfo, FileList};
 use my_logger::{log, logw, logd};
@@ -38,6 +38,9 @@ use chrono::Local;
 /// issues reading lines from the file.
 
 pub fn hash_file_list(total: & i32) -> FileList {
+    // Hide the cursor.
+    print!("\x1B[?25l");
+    io::stdout().flush().unwrap();
     logw!("STATUS: Hashing files: Please wait...");
     let date = Local::now().format("%Y-%m-%d").to_string();
     let mut file_hashed = 0;
@@ -56,6 +59,7 @@ pub fn hash_file_list(total: & i32) -> FileList {
             // Increment the counter for successfully hashed files
             file_hashed += 1;
             print!("\r{file_hashed} / {total}");
+            io::stdout().flush().unwrap();
             return liste;
         }
     };
@@ -69,6 +73,7 @@ pub fn hash_file_list(total: & i32) -> FileList {
                 file_hashed += 1;
                 let percentage = (file_hashed * 100) / total;
                 print!("\r{file_hashed} / {total}: {percentage}%");
+                io::stdout().flush().unwrap();
                 continue;
             }
         };
@@ -85,10 +90,14 @@ pub fn hash_file_list(total: & i32) -> FileList {
                 file_hashed += 1;
                 let percentage = (file_hashed * 100) / total;
                 print!("\r{}% - {}/{}", percentage, file_hashed, total);
+                io::stdout().flush().unwrap();
         }
     }
     log!("STATUS: Hashing files: Success !");
     log!("infos: Hashed files: {file_hashed} !");
+    // Show the cursor again.
+    print!("\x1B[?25h");
+    io::stdout().flush().unwrap();
     liste
 }
 

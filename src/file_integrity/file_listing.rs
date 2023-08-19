@@ -37,7 +37,7 @@ use my_logger::{log, logw};
 
 
 pub fn list_files(folder_to_list: &str) -> i32 {
-    log!("STATUS: Listing files: Please wait...");
+    logw!("STATUS: Listing files: Please wait...");
     let mut count = 0;
     let mut filenames = Vec::new();
 
@@ -71,6 +71,7 @@ pub fn list_files(folder_to_list: &str) -> i32 {
     } else {
         log!("ERROR: Failed to create file_list.txt");
     }
+    println!("\n") ;
     logw!("STATUS: List of files: Succes !");
     count
 }
